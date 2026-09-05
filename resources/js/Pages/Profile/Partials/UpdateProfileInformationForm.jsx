@@ -6,134 +6,124 @@ import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
 
 export default function UpdateProfileInformation({
-    mustVerifyEmail,
-    status,
-    className = '',
+  mustVerifyEmail,
+  status,
+  className = '',
 }) {
-    const user = usePage().props.auth.user;
+  const user = usePage().props.auth.user;
 
-    const { data, setData, patch, errors, processing, recentlySuccessful } =
-        useForm({
-            first_name: user.first_name,
-            last_name: user.last_name,
-            email: user.email,
-            phone: user.phone ?? '',
-        });
+  const { data, setData, patch, errors, processing, recentlySuccessful } =
+    useForm({
+      first_name: user.first_name,
+      last_name: user.last_name,
+      email: user.email,
+      phone: user.phone ?? '',
+    });
 
-    const submit = (e) => {
-        e.preventDefault();
+  const submit = (e) => {
+    e.preventDefault();
 
-        patch(route('profile.update'));
-    };
+    patch(route('profile.update'));
+  };
 
-    return (
-        <section className={className}>
-            <header>
-                <h2 className="text-lg font-medium text-gray-900">
-                    Profile Information
-                </h2>
+  return (
+    <section className={className}>
+      <header>
+        <h2 className="text-lg font-medium text-gray-900">
+          Profile Information
+        </h2>
 
-                <p className="mt-1 text-sm text-gray-600">
-                    Update your account's profile information and email address.
-                </p>
-            </header>
+        <p className="mt-1 text-sm text-gray-600">
+          Update your account's profile information and email address.
+        </p>
+      </header>
 
-            <form onSubmit={submit} className="mt-6 space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <InputLabel htmlFor="first_name" value="First Name" />
+      <form onSubmit={submit} className="mt-6 space-y-6">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <InputLabel htmlFor="first_name" value="First Name" />
 
-                        <TextInput
-                            id="first_name"
-                            className="mt-1 block w-full"
-                            value={data.first_name}
-                            onChange={(e) =>
-                                setData('first_name', e.target.value)
-                            }
-                            required
-                            isFocused
-                            autoComplete="given-name"
-                        />
+            <TextInput
+              id="first_name"
+              className="mt-1 block w-full"
+              value={data.first_name}
+              onChange={(e) => setData('first_name', e.target.value)}
+              required
+              isFocused
+              autoComplete="given-name"
+            />
 
-                        <InputError
-                            className="mt-2"
-                            message={errors.first_name}
-                        />
-                    </div>
+            <InputError className="mt-2" message={errors.first_name} />
+          </div>
 
-                    <div>
-                        <InputLabel htmlFor="last_name" value="Last Name" />
+          <div>
+            <InputLabel htmlFor="last_name" value="Last Name" />
 
-                        <TextInput
-                            id="last_name"
-                            className="mt-1 block w-full"
-                            value={data.last_name}
-                            onChange={(e) =>
-                                setData('last_name', e.target.value)
-                            }
-                            required
-                            autoComplete="family-name"
-                        />
+            <TextInput
+              id="last_name"
+              className="mt-1 block w-full"
+              value={data.last_name}
+              onChange={(e) => setData('last_name', e.target.value)}
+              required
+              autoComplete="family-name"
+            />
 
-                        <InputError
-                            className="mt-2"
-                            message={errors.last_name}
-                        />
-                    </div>
-                </div>
+            <InputError className="mt-2" message={errors.last_name} />
+          </div>
+        </div>
 
-                <div>
-                    <InputLabel htmlFor="email" value="Email" />
+        <div>
+          <InputLabel htmlFor="email" value="Email" />
 
-                    <TextInput
-                        id="email"
-                        type="email"
-                        className="mt-1 block w-full"
-                        value={data.email}
-                        onChange={(e) => setData('email', e.target.value)}
-                        required
-                        autoComplete="username"
-                    />
+          <TextInput
+            id="email"
+            type="email"
+            className="mt-1 block w-full"
+            value={data.email}
+            onChange={(e) => setData('email', e.target.value)}
+            required
+            autoComplete="username"
+          />
 
-                    <InputError className="mt-2" message={errors.email} />
-                </div>
+          <InputError className="mt-2" message={errors.email} />
+        </div>
 
-                <div>
-                    <InputLabel htmlFor="phone" value="Mobile Phone" />
+        <div>
+          <InputLabel htmlFor="phone" value="Mobile Phone" />
 
-                    <TextInput
-                        id="phone"
-                        className="mt-1 block w-full"
-                        value={data.phone}
-                        onChange={(e) => setData('phone', e.target.value)}
-                        autoComplete="tel"
-                    />
+          <TextInput
+            id="phone"
+            className="mt-1 block w-full"
+            value={data.phone}
+            onChange={(e) => setData('phone', e.target.value)}
+            autoComplete="tel"
+          />
 
-                    <InputError className="mt-2" message={errors.phone} />
-                </div>
+          <InputError className="mt-2" message={errors.phone} />
+        </div>
 
-                {mustVerifyEmail && user.email_verified_at === null && (
-                    <div>
-                        <p className="mt-2 text-sm text-gray-800">
-                            Your email address is unverified.
-                        </p>
-                    </div>
-                )}
+        {mustVerifyEmail && user.email_verified_at === null && (
+          <div>
+            <p className="mt-2 text-sm text-gray-800">
+              Your email address is unverified.
+            </p>
+          </div>
+        )}
 
-                <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Save</PrimaryButton>
+        <div className="flex items-center gap-4">
+          <PrimaryButton disabled={processing}>Save</PrimaryButton>
 
-                    <Transition
-                        show={recentlySuccessful}
-                        enter="transition ease-in-out"
-                        enterFrom="opacity-0"
-                        leave="transition ease-in-out"
-                        leaveTo="opacity-0"
-                    >
-                        <p className="text-sm text-gray-600">Saved.</p>
-                    </Transition>
-                </div>
-            </form>
-        </section>
-    );
+          <Transition
+            show={recentlySuccessful}
+            enter="transition ease-in-out"
+            enterFrom="opacity-0"
+            leave="transition ease-in-out"
+            leaveTo="opacity-0"
+          >
+            <p className="text-sm text-gray-600">Saved.</p>
+          </Transition>
+        </div>
+      </form>
+    </section>
+  );
 }

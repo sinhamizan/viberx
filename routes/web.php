@@ -23,7 +23,7 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+  return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('/pricing', [PricingController::class, 'index'])->name('pricing.index');
@@ -39,14 +39,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::get('/identity-verification', [IdentityVerificationController::class, 'show'])
-        ->name('identity.show');
-    Route::post('/identity-verification', [IdentityVerificationController::class, 'store'])
-        ->name('identity.store');
-    Route::post('/identity-verification/confirm', [IdentityVerificationController::class, 'confirm'])
-        ->name('identity.confirm');
-    Route::post('/identity-verification/skip', [IdentityVerificationController::class, 'skip'])
-        ->name('identity.skip');
+    Route::get('/identity-verification', [IdentityVerificationController::class, 'show'])->name('identity.show');
+    Route::post('/identity-verification', [IdentityVerificationController::class, 'store'])->name('identity.store');
+    Route::post('/identity-verification/confirm', [IdentityVerificationController::class, 'confirm'])->name('identity.confirm');
+    Route::post('/identity-verification/skip', [IdentityVerificationController::class, 'skip'])->name('identity.skip');
 
     Route::get('/assessment', [AssessmentController::class, 'show'])->name('assessment.show');
     Route::post('/assessment', [AssessmentController::class, 'store'])->name('assessment.store');

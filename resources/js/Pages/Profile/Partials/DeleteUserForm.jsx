@@ -8,113 +8,101 @@ import { useForm, usePage } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 
 export default function DeleteUserForm({ className = '' }) {
-    const user = usePage().props.auth.user;
-    const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(false);
-    const emailInput = useRef();
+  const user = usePage().props.auth.user;
+  const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(false);
+  const emailInput = useRef();
 
-    const {
-        data,
-        setData,
-        delete: destroy,
-        processing,
-        reset,
-        errors,
-        clearErrors,
-    } = useForm({
-        email: '',
+  const {
+    data,
+    setData,
+    delete: destroy,
+    processing,
+    reset,
+    errors,
+    clearErrors,
+  } = useForm({
+    email: '',
+  });
+
+  const confirmUserDeletion = () => {
+    setConfirmingUserDeletion(true);
+  };
+
+  const deleteUser = (e) => {
+    e.preventDefault();
+
+    destroy(route('profile.destroy'), {
+      preserveScroll: true,
+      onSuccess: () => closeModal(),
+      onError: () => emailInput.current.focus(),
+      onFinish: () => reset(),
     });
+  };
 
-    const confirmUserDeletion = () => {
-        setConfirmingUserDeletion(true);
-    };
+  const closeModal = () => {
+    setConfirmingUserDeletion(false);
 
-    const deleteUser = (e) => {
-        e.preventDefault();
+    clearErrors();
+    reset();
+  };
 
-        destroy(route('profile.destroy'), {
-            preserveScroll: true,
-            onSuccess: () => closeModal(),
-            onError: () => emailInput.current.focus(),
-            onFinish: () => reset(),
-        });
-    };
+  return (
+    <section className={`space-y-6 ${className}`}>
+      <header>
+        <h2 className="text-lg font-medium text-gray-900">Delete Account</h2>
 
-    const closeModal = () => {
-        setConfirmingUserDeletion(false);
+        <p className="mt-1 text-sm text-gray-600">
+          Once your account is deleted, all of its resources and data will be
+          permanently deleted. Before deleting your account, please download any
+          data or information that you wish to retain.
+        </p>
+      </header>
 
-        clearErrors();
-        reset();
-    };
+      <DangerButton onClick={confirmUserDeletion}>Delete Account</DangerButton>
 
-    return (
-        <section className={`space-y-6 ${className}`}>
-            <header>
-                <h2 className="text-lg font-medium text-gray-900">
-                    Delete Account
-                </h2>
+      <Modal show={confirmingUserDeletion} onClose={closeModal}>
+        <form onSubmit={deleteUser} className="p-6">
+          <h2 className="text-lg font-medium text-gray-900">
+            Are you sure you want to delete your account?
+          </h2>
 
-                <p className="mt-1 text-sm text-gray-600">
-                    Once your account is deleted, all of its resources and data
-                    will be permanently deleted. Before deleting your account,
-                    please download any data or information that you wish to
-                    retain.
-                </p>
-            </header>
+          <p className="mt-1 text-sm text-gray-600">
+            Once your account is deleted, all of its resources and data will be
+            permanently deleted. Please type{' '}
+            <span className="font-semibold">{user.email}</span> to confirm you
+            would like to permanently delete your account.
+          </p>
 
-            <DangerButton onClick={confirmUserDeletion}>
-                Delete Account
+          <div className="mt-6">
+            <InputLabel htmlFor="email" value="Email" className="sr-only" />
+
+            <TextInput
+              id="email"
+              type="email"
+              name="email"
+              ref={emailInput}
+              value={data.email}
+              onChange={(e) => setData('email', e.target.value)}
+              className="mt-1 block w-3/4"
+              isFocused
+              placeholder={user.email}
+            />
+
+            <InputError message={errors.email} className="mt-2" />
+          </div>
+
+          <div className="mt-6 flex justify-end">
+            <SecondaryButton onClick={closeModal}>Cancel</SecondaryButton>
+
+            <DangerButton
+              className="ms-3"
+              disabled={processing || data.email !== user.email}
+            >
+              Delete Account
             </DangerButton>
-
-            <Modal show={confirmingUserDeletion} onClose={closeModal}>
-                <form onSubmit={deleteUser} className="p-6">
-                    <h2 className="text-lg font-medium text-gray-900">
-                        Are you sure you want to delete your account?
-                    </h2>
-
-                    <p className="mt-1 text-sm text-gray-600">
-                        Once your account is deleted, all of its resources and
-                        data will be permanently deleted. Please type{' '}
-                        <span className="font-semibold">{user.email}</span> to
-                        confirm you would like to permanently delete your
-                        account.
-                    </p>
-
-                    <div className="mt-6">
-                        <InputLabel
-                            htmlFor="email"
-                            value="Email"
-                            className="sr-only"
-                        />
-
-                        <TextInput
-                            id="email"
-                            type="email"
-                            name="email"
-                            ref={emailInput}
-                            value={data.email}
-                            onChange={(e) => setData('email', e.target.value)}
-                            className="mt-1 block w-3/4"
-                            isFocused
-                            placeholder={user.email}
-                        />
-
-                        <InputError message={errors.email} className="mt-2" />
-                    </div>
-
-                    <div className="mt-6 flex justify-end">
-                        <SecondaryButton onClick={closeModal}>
-                            Cancel
-                        </SecondaryButton>
-
-                        <DangerButton
-                            className="ms-3"
-                            disabled={processing || data.email !== user.email}
-                        >
-                            Delete Account
-                        </DangerButton>
-                    </div>
-                </form>
-            </Modal>
-        </section>
-    );
+          </div>
+        </form>
+      </Modal>
+    </section>
+  );
 }
