@@ -1,4 +1,4 @@
-import MarketingLayout from '@/Layouts/MainLayout';
+import MainLayout from '@/Layouts/MainLayout';
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 
