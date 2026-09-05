@@ -2,7 +2,10 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Enums\OrderStatus;
 use App\Models\EmailOtp;
+use App\Models\Order;
+use App\Models\Plan;
 use App\Models\User;
 use App\Notifications\SendOtpCode;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -137,6 +140,48 @@ class OtpAuthControllerTest extends TestCase
         $user = User::where('email', $email)->firstOrFail();
         $this->assertNotNull($user->email_verified_at);
         $this->assertDatabaseCount('email_otps', 0);
+    }
+
+    public function test_verifying_correct_code_attaches_a_pending_guest_order_and_redirects_to_assessment(): void
+    {
+        Notification::fake();
+
+        $plan = Plan::factory()->create();
+        $order = Order::factory()->create([
+            'user_id' => null,
+            'plan_id' => $plan->id,
+            'status' => OrderStatus::Draft,
+        ]);
+
+        $email = 'alex@example.com';
+
+        $this->withSession(['pending_order_id' => $order->id])->post('/register', [
+            'first_name' => 'Alex',
+            'last_name' => 'Rivera',
+            'email' => $email,
+            'terms' => true,
+        ]);
+
+        $code = null;
+        Notification::assertSentOnDemand(
+            SendOtpCode::class,
+            function (SendOtpCode $notification, array $channels, object $notifiable) use (&$code, $email) {
+                if ($notifiable->routes['mail'] !== $email) {
+                    return false;
+                }
+
+                $code = $notification->code;
+
+                return true;
+            }
+        );
+
+        $response = $this->post('/verify-otp', ['code' => $code]);
+
+        $response->assertRedirect(route('assessment.show'));
+
+        $user = User::where('email', $email)->firstOrFail();
+        $this->assertSame($user->id, $order->fresh()->user_id);
     }
 
     public function test_verifying_correct_code_after_logging_in_authenticates_and_redirects_to_dashboard(): void

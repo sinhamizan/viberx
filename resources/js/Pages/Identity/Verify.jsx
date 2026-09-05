@@ -27,11 +27,12 @@ export default function Verify({
     phone,
     documentTypes,
     verification,
+    nextRoute,
 }) {
     const [retrying, setRetrying] = useState(false);
 
     if (!retrying && verification?.status === 'verified') {
-        return <VerifiedView verification={verification} />;
+        return <VerifiedView verification={verification} nextRoute={nextRoute} />;
     }
 
     if (!retrying && verification?.status === 'in_progress') {
@@ -429,7 +430,7 @@ function RejectedView({ verification, onRetry }) {
     );
 }
 
-function VerifiedView({ verification }) {
+function VerifiedView({ verification, nextRoute }) {
     return (
         <GuestLayout>
             <Head title="Identity verified" />
@@ -478,7 +479,7 @@ function VerifiedView({ verification }) {
 
             <button
                 type="button"
-                onClick={() => router.visit(route('dashboard'))}
+                onClick={() => router.visit(nextRoute)}
                 className="mt-6 w-full rounded-md bg-emerald-300 py-3 text-sm font-semibold uppercase tracking-wide text-neutral-900 transition hover:bg-emerald-200"
             >
                 Continue

@@ -7,6 +7,7 @@ use App\Enums\OtpVerificationResult;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Models\Order;
 use App\Models\User;
 use App\Services\OtpService;
 use Illuminate\Http\RedirectResponse;
@@ -135,11 +136,18 @@ class OtpAuthController extends Controller
         }
 
         $intent = $request->session()->get(self::INTENT_SESSION_KEY);
+        $pendingOrderId = $request->session()->pull('pending_order_id');
 
         $request->session()->forget([self::SESSION_KEY, self::INTENT_SESSION_KEY]);
         $request->session()->regenerate();
 
         Auth::login($user);
+
+        if ($pendingOrderId) {
+            Order::whereNull('user_id')->where('id', $pendingOrderId)->update(['user_id' => $user->id]);
+
+            return to_route('assessment.show');
+        }
 
         return $intent === OtpIntent::Register
             ? to_route('identity.show')

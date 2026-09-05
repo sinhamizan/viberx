@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AssessmentStatus;
 use App\Enums\DocumentType;
 use App\Enums\IdentityVerificationStatus;
+use App\Enums\OrderStatus;
 use App\Http\Requests\IdentityVerificationRequest;
 use App\Services\DocumentOcrService;
 use Illuminate\Http\RedirectResponse;
@@ -39,7 +41,24 @@ class IdentityVerificationController extends Controller
                 'legalName' => trim("{$verification->legal_first_name} {$verification->legal_last_name}"),
                 'rejectionReason' => $verification->rejection_reason,
             ] : null,
+            'nextRoute' => $this->nextRouteAfterVerification($request),
         ]);
+    }
+
+    /**
+     * Where "Continue" should take the user once identity is verified: into
+     * shipping if they arrived here mid-order (assessment already submitted),
+     * otherwise the dashboard.
+     */
+    private function nextRouteAfterVerification(Request $request): string
+    {
+        $order = $request->user()->orders()->where('status', OrderStatus::Draft)->latest()->first();
+
+        if ($order && $order->assessment?->status === AssessmentStatus::Submitted) {
+            return route('shipping.show');
+        }
+
+        return route('dashboard');
     }
 
     public function store(IdentityVerificationRequest $request): RedirectResponse

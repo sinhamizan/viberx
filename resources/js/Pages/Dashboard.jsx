@@ -33,7 +33,7 @@ export default function Dashboard() {
                             </div>
 
                             <Link
-                                href={route('plans.index')}
+                                href={route('state.show')}
                                 className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
                             >
                                 Start Assessment

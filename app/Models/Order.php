@@ -13,10 +13,17 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'user_id',
+    'state',
     'plan_id',
     'billing_cadence',
     'status',
     'current_step',
+    'stripe_setup_intent_id',
+    'stripe_payment_method_id',
+    'card_brand',
+    'card_last_four',
+    'card_exp_month',
+    'card_exp_year',
     'submitted_at',
 ])]
 class Order extends Model

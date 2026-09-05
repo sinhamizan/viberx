@@ -9,9 +9,12 @@ function formatDollars(cents) {
     });
 }
 
-export default function Select({ plans }) {
+export default function Select({ plans, preselectedPlanId }) {
     const { data, setData, post, processing } = useForm({
-        plan_id: plans.find((plan) => plan.is_recommended)?.id ?? plans[0]?.id,
+        plan_id:
+            preselectedPlanId ??
+            plans.find((plan) => plan.is_recommended)?.id ??
+            plans[0]?.id,
         billing_cadence: 'quarterly',
     });
 
