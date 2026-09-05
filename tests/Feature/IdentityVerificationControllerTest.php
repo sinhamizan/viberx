@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\IdentityVerificationStatus;
 use App\Models\IdentityVerification;
 use App\Models\User;
+use App\Services\DocumentOcrService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -78,8 +79,12 @@ class IdentityVerificationControllerTest extends TestCase
         ]);
     }
 
-    public function test_confirming_marks_the_latest_verification_as_verified(): void
+    public function test_confirming_a_readable_document_marks_it_verified(): void
     {
+        $this->mock(DocumentOcrService::class, function ($mock) {
+            $mock->shouldReceive('looksLikeReadableDocument')->once()->andReturn(true);
+        });
+
         $user = User::factory()->create();
         $verification = IdentityVerification::factory()->for($user)->create();
 
@@ -92,6 +97,25 @@ class IdentityVerificationControllerTest extends TestCase
             $verification->fresh()->status,
         );
         $this->assertNotNull($verification->fresh()->verified_at);
+    }
+
+    public function test_confirming_an_unreadable_document_marks_it_rejected(): void
+    {
+        $this->mock(DocumentOcrService::class, function ($mock) {
+            $mock->shouldReceive('looksLikeReadableDocument')->once()->andReturn(false);
+        });
+
+        $user = User::factory()->create();
+        $verification = IdentityVerification::factory()->for($user)->create();
+
+        $response = $this->actingAs($user)->post('/identity-verification/confirm');
+
+        $response->assertRedirect(route('identity.show'));
+
+        $verification->refresh();
+        $this->assertSame(IdentityVerificationStatus::Rejected, $verification->status);
+        $this->assertNotNull($verification->rejection_reason);
+        $this->assertNull($verification->verified_at);
     }
 
     public function test_skipping_marks_verification_as_skipped_and_redirects_to_dashboard(): void

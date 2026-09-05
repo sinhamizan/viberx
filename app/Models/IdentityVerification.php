@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'front_photo_path',
     'back_photo_path',
     'status',
+    'rejection_reason',
     'verified_at',
 ])]
 class IdentityVerification extends Model

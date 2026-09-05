@@ -102,19 +102,53 @@ class OtpAuthControllerTest extends TestCase
         );
     }
 
-    public function test_verifying_correct_code_authenticates_user_and_marks_email_verified(): void
+    public function test_verifying_correct_code_after_registering_authenticates_and_redirects_to_identity_verification(): void
     {
-        $user = User::factory()->unverified()->create(['email' => 'alex@example.com']);
+        Notification::fake();
+
+        $email = 'alex@example.com';
+
+        $this->post('/register', [
+            'first_name' => 'Alex',
+            'last_name' => 'Rivera',
+            'email' => $email,
+            'terms' => true,
+        ]);
+
+        $code = null;
+        Notification::assertSentOnDemand(
+            SendOtpCode::class,
+            function (SendOtpCode $notification, array $channels, object $notifiable) use (&$code, $email) {
+                if ($notifiable->routes['mail'] !== $email) {
+                    return false;
+                }
+
+                $code = $notification->code;
+
+                return true;
+            }
+        );
+
+        $response = $this->post('/verify-otp', ['code' => $code]);
+
+        $response->assertRedirect(route('identity.show'));
+        $this->assertAuthenticated();
+
+        $user = User::where('email', $email)->firstOrFail();
+        $this->assertNotNull($user->email_verified_at);
+        $this->assertDatabaseCount('email_otps', 0);
+    }
+
+    public function test_verifying_correct_code_after_logging_in_authenticates_and_redirects_to_dashboard(): void
+    {
+        $user = User::factory()->create(['email' => 'alex@example.com']);
         $code = $this->sendCodeAndCapture($user->email);
 
         $response = $this->withSession(['otp_pending_email' => $user->email])
             ->post('/verify-otp', ['code' => $code]);
 
-        $response->assertRedirect(route('identity.show'));
+        $response->assertRedirect(route('dashboard'));
         $this->assertAuthenticatedAs($user);
-
-        $this->assertNotNull($user->fresh()->email_verified_at);
-        $this->assertDatabaseCount('email_otps', 0);
     }
 
     public function test_verifying_incorrect_code_returns_error_and_keeps_user_a_guest(): void

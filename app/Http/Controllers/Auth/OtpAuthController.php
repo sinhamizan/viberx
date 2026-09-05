@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\Auth\OtpIntent;
 use App\Enums\OtpVerificationResult;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
@@ -18,6 +19,8 @@ use Inertia\Response;
 class OtpAuthController extends Controller
 {
     private const SESSION_KEY = 'otp_pending_email';
+
+    private const INTENT_SESSION_KEY = 'otp_intent';
 
     public function __construct(private readonly OtpService $otpService)
     {
@@ -36,6 +39,7 @@ class OtpAuthController extends Controller
         $this->otpService->generateAndSendFor($user->email);
 
         $request->session()->put(self::SESSION_KEY, $user->email);
+        $request->session()->put(self::INTENT_SESSION_KEY, OtpIntent::Register);
 
         return to_route('otp.verify');
     }
@@ -52,6 +56,7 @@ class OtpAuthController extends Controller
         $this->otpService->generateAndSendFor($email);
 
         $request->session()->put(self::SESSION_KEY, $email);
+        $request->session()->put(self::INTENT_SESSION_KEY, OtpIntent::Login);
 
         return to_route('otp.verify');
     }
@@ -129,11 +134,15 @@ class OtpAuthController extends Controller
             $user->forceFill(['email_verified_at' => now()])->save();
         }
 
-        $request->session()->forget(self::SESSION_KEY);
+        $intent = $request->session()->get(self::INTENT_SESSION_KEY);
+
+        $request->session()->forget([self::SESSION_KEY, self::INTENT_SESSION_KEY]);
         $request->session()->regenerate();
 
         Auth::login($user);
 
-        return to_route('identity.show');
+        return $intent === OtpIntent::Register
+            ? to_route('identity.show')
+            : to_route('dashboard');
     }
 }

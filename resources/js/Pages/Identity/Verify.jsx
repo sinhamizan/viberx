@@ -28,12 +28,23 @@ export default function Verify({
     documentTypes,
     verification,
 }) {
-    if (verification?.status === 'verified') {
+    const [retrying, setRetrying] = useState(false);
+
+    if (!retrying && verification?.status === 'verified') {
         return <VerifiedView verification={verification} />;
     }
 
-    if (verification?.status === 'in_progress') {
+    if (!retrying && verification?.status === 'in_progress') {
         return <ProcessingView />;
+    }
+
+    if (!retrying && verification?.status === 'rejected') {
+        return (
+            <RejectedView
+                verification={verification}
+                onRetry={() => setRetrying(true)}
+            />
+        );
     }
 
     return (
@@ -377,6 +388,43 @@ function ProcessingView() {
                     </span>
                 </div>
             </div>
+        </GuestLayout>
+    );
+}
+
+function RejectedView({ verification, onRetry }) {
+    return (
+        <GuestLayout>
+            <Head title="Identity verification failed" />
+
+            <h1 className="text-center text-2xl font-bold text-white">
+                Verify your identity
+            </h1>
+            <p className="mt-2 text-center text-sm text-neutral-400">
+                We couldn&apos;t verify your document. You can try again with
+                a clearer photo.
+            </p>
+
+            <div className="mt-8 rounded-md border border-red-900/50 bg-red-950/30 p-5">
+                <span className="inline-flex items-center rounded border border-red-400/40 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-red-400">
+                    Not verified
+                </span>
+
+                <h2 className="mt-3 text-sm font-semibold uppercase tracking-wide text-white">
+                    Verification Failed
+                </h2>
+                <p className="mt-1 text-sm text-neutral-400">
+                    {verification.rejectionReason}
+                </p>
+            </div>
+
+            <button
+                type="button"
+                onClick={onRetry}
+                className="mt-6 w-full rounded-md bg-emerald-300 py-3 text-sm font-semibold uppercase tracking-wide text-neutral-900 transition hover:bg-emerald-200"
+            >
+                Try again
+            </button>
         </GuestLayout>
     );
 }

@@ -5,13 +5,20 @@ namespace App\Http\Controllers;
 use App\Enums\DocumentType;
 use App\Enums\IdentityVerificationStatus;
 use App\Http\Requests\IdentityVerificationRequest;
+use App\Services\DocumentOcrService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class IdentityVerificationController extends Controller
 {
+    public function __construct(private readonly DocumentOcrService $ocr)
+    {
+        //
+    }
+
     public function show(Request $request): Response
     {
         $user = $request->user();
@@ -30,6 +37,7 @@ class IdentityVerificationController extends Controller
                 'status' => $verification->status->value,
                 'documentTypeLabel' => $verification->document_type?->label(),
                 'legalName' => trim("{$verification->legal_first_name} {$verification->legal_last_name}"),
+                'rejectionReason' => $verification->rejection_reason,
             ] : null,
         ]);
     }
@@ -52,9 +60,16 @@ class IdentityVerificationController extends Controller
     {
         $verification = $request->user()->identityVerifications()->latest()->firstOrFail();
 
-        $verification->update([
+        $isReadable = $this->ocr->looksLikeReadableDocument(
+            Storage::path($verification->front_photo_path)
+        );
+
+        $verification->update($isReadable ? [
             'status' => IdentityVerificationStatus::Verified,
             'verified_at' => now(),
+        ] : [
+            'status' => IdentityVerificationStatus::Rejected,
+            'rejection_reason' => "We couldn't read any text on the document photo. Please retake the photo in good lighting and try again.",
         ]);
 
         return to_route('identity.show');
