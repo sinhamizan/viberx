@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\IdentityVerificationController;
+use App\Http\Controllers\PlanSelectionController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +34,12 @@ Route::middleware('auth')->group(function () {
         ->name('identity.confirm');
     Route::post('/identity-verification/skip', [IdentityVerificationController::class, 'skip'])
         ->name('identity.skip');
+
+    Route::get('/plans', [PlanSelectionController::class, 'index'])->name('plans.index');
+    Route::post('/plans', [PlanSelectionController::class, 'store'])->name('plans.store');
+
+    Route::get('/assessment', [AssessmentController::class, 'show'])->name('assessment.show');
+    Route::post('/assessment', [AssessmentController::class, 'store'])->name('assessment.store');
 });
 
 require __DIR__.'/auth.php';
