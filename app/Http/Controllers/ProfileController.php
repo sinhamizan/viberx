@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -46,10 +47,16 @@ class ProfileController extends Controller
     public function destroy(Request $request): RedirectResponse
     {
         $request->validate([
-            'password' => ['required', 'current_password'],
+            'email' => ['required', 'string', 'email'],
         ]);
 
         $user = $request->user();
+
+        if (strtolower($request->string('email')->trim()->value()) !== strtolower($user->email)) {
+            throw ValidationException::withMessages([
+                'email' => 'The email address does not match your account.',
+            ]);
+        }
 
         Auth::logout();
 

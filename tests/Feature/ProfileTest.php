@@ -3,12 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_profile_page_is_displayed(): void
     {
@@ -28,8 +28,10 @@ class ProfileTest extends TestCase
         $response = $this
             ->actingAs($user)
             ->patch('/profile', [
-                'name' => 'Test User',
+                'first_name' => 'Test',
+                'last_name' => 'User',
                 'email' => 'test@example.com',
+                'phone' => '01700000000',
             ]);
 
         $response
@@ -38,8 +40,10 @@ class ProfileTest extends TestCase
 
         $user->refresh();
 
-        $this->assertSame('Test User', $user->name);
+        $this->assertSame('Test', $user->first_name);
+        $this->assertSame('User', $user->last_name);
         $this->assertSame('test@example.com', $user->email);
+        $this->assertSame('01700000000', $user->phone);
         $this->assertNull($user->email_verified_at);
     }
 
@@ -50,7 +54,8 @@ class ProfileTest extends TestCase
         $response = $this
             ->actingAs($user)
             ->patch('/profile', [
-                'name' => 'Test User',
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
                 'email' => $user->email,
             ]);
 
@@ -61,14 +66,14 @@ class ProfileTest extends TestCase
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
 
-    public function test_user_can_delete_their_account(): void
+    public function test_user_can_delete_their_account_by_typing_their_email(): void
     {
         $user = User::factory()->create();
 
         $response = $this
             ->actingAs($user)
             ->delete('/profile', [
-                'password' => 'password',
+                'email' => $user->email,
             ]);
 
         $response
@@ -79,7 +84,7 @@ class ProfileTest extends TestCase
         $this->assertNull($user->fresh());
     }
 
-    public function test_correct_password_must_be_provided_to_delete_account(): void
+    public function test_a_mismatched_email_is_rejected_when_deleting_account(): void
     {
         $user = User::factory()->create();
 
@@ -87,11 +92,11 @@ class ProfileTest extends TestCase
             ->actingAs($user)
             ->from('/profile')
             ->delete('/profile', [
-                'password' => 'wrong-password',
+                'email' => 'someone-else@example.com',
             ]);
 
         $response
-            ->assertSessionHasErrors('password')
+            ->assertSessionHasErrors('email')
             ->assertRedirect('/profile');
 
         $this->assertNotNull($user->fresh());
